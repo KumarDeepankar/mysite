@@ -1,0 +1,21 @@
+def _get_base_url(request: Request) -> str:
+    """Get external base URL respecting ALB/proxy forwarded headers."""
+    forwarded_proto = request.headers.get("x-forwarded-proto")
+    forwarded_host = request.headers.get("x-forwarded-host") or request.headers.get("host")
+    if forwarded_proto and forwarded_host:
+        # Strip internal port if present (ALB exposes on 443, not 8021)
+        host = forwarded_host.split(":")[0]
+        return f"{forwarded_proto}://{host}"
+    return str(request.base_url).rstrip("/")
+
+
+
+      147 -    base_url = str(request.base_url).rstrip('/')                                                                        
+      146 +    # Build redirect URI (respects ALB/proxy forwarded headers)                                                         
+      147 +    base_url = _get_base_url(request) 
+
+
+      427 -    # Build redirect URI for OAuth callback (reuse /auth/callback)                                                      
+      428 -    base_url = str(request.base_url).rstrip('/')                                                                        
+      427 +    # Build redirect URI for OAuth callback (respects ALB/proxy forwarded headers)                                      
+      428 +    base_url = _get_base_url(request) 
